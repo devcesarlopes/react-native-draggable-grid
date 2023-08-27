@@ -1,17 +1,17 @@
 {
-  "name": "react-native-draggable-grid",
+  "name": "@devcesarlopes/react-native-draggable-grid",
   "keywords": [
     "drag",
     "sortable",
     "grid"
   ],
-  "version": "2.1.7",
+  "version": "1.0.0",
   "description": "A draggable grid for react native",
   "main": "built/src/index.js",
   "types": "src/index.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SHISME/react-native-draggable-grid"
+    "url": "https://github.com/devcesarlopes/react-native-draggable-grid"
   },
   "scripts": {
     "built": "rm -rf built && tsc",

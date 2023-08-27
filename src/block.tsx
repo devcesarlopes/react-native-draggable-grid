@@ -15,33 +15,51 @@ interface BlockProps {
   dragStartAnimationStyle: StyleProp<any>
   onPress?: () => void
   onLongPress: () => void
+  onPressOut: () => void,
   panHandlers: GestureResponderHandlers
   delayLongPress:number
   children?:React.ReactNode
+  opacity:any
 }
 
 export const Block: FunctionComponent<BlockProps> = ({
   style,
   dragStartAnimationStyle,
   onPress,
+  onPressOut,
   onLongPress,
   children,
   panHandlers,
-  delayLongPress
+  delayLongPress,
+  opacity,
 }) => {
+  const styles = StyleSheet.create({
+    blockContainer: {
+      alignItems: 'center',
+    },
+    overlayContainer: {
+      top: '-3%',
+      left: '-6%',
+      width: '90%',
+      height: '106%',
+      opacity: opacity,
+      position: 'absolute',
+      backgroundColor: '#d3d3d3',
+      borderRadius: 20,
+      paddingHorizontal: '2%',
+    },
+  })
+  
   return (
     <Animated.View style={[styles.blockContainer, style, dragStartAnimationStyle]} {...panHandlers}>
       <Animated.View>
-        <TouchableWithoutFeedback delayLongPress={delayLongPress} onPress={onPress} onLongPress={onLongPress}>
-          {children}
-        </TouchableWithoutFeedback>
+        <>
+          <Animated.View style={styles.overlayContainer} />
+          <TouchableWithoutFeedback delayLongPress={delayLongPress} onPress={onPress} onLongPress={onLongPress} onPressOut={onPressOut}>
+            {children}
+          </TouchableWithoutFeedback>
+        </>
       </Animated.View>
     </Animated.View>
   )
 }
-
-const styles = StyleSheet.create({
-  blockContainer: {
-    alignItems: 'center',
-  },
-})

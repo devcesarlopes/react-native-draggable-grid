@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   PanResponder,
   Animated,
@@ -23,6 +23,7 @@ interface IBaseItemType {
 }
 
 export interface IDraggableGridProps<DataType extends IBaseItemType> {
+  onReleaseOverlaying?: (draggingItem: DataType, colidedItem: DataType) => void
   numColumns: number
   data: DataType[]
   renderItem: (item: DataType, order: number) => React.ReactElement<any>
@@ -47,6 +48,7 @@ interface IOrderMapItem {
   order: number
 }
 interface IItem<DataType> {
+  isOverlaying: Animated.Value
   key: string | number
   itemData: DataType
   currentPosition: Animated.AnimatedValueXY
@@ -64,6 +66,7 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
   const [blockWidth, setBlockWidth] = useState(0)
   const [gridHeight] = useState<Animated.Value>(new Animated.Value(0))
   const [hadInitBlockSize, setHadInitBlockSize] = useState(false)
+  const isDragging = useRef(false)
   const [dragStartAnimatedValue] = useState(new Animated.Value(1))
   const [gridLayout, setGridLayout] = useState({
     x: 0,
@@ -72,7 +75,7 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
     height: 0,
   })
   const [activeItemIndex, setActiveItemIndex] = useState<undefined | number>()
-
+  const overlayOpacity = 0.5;
   const assessGridSize = (event: IOnLayoutEvent) => {
     if (!hadInitBlockSize) {
       let blockWidth = event.nativeEvent.layout.width / props.numColumns
@@ -124,6 +127,7 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
   function onStartDrag(_: GestureResponderEvent, gestureState: PanResponderGestureState) {
     const activeItem = getActiveItem()
     if (!activeItem) return false
+    isDragging.current = true;
     props.onDragStart && props.onDragStart(activeItem.itemData)
     const { x0, y0, moveX, moveY } = gestureState
     const activeOrigin = blockPositions[orderMap[activeItem.key].order]
@@ -142,6 +146,32 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
       y: moveY,
     })
   }
+
+  type Coordinates = {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  function areItemsOverlapping(item1: Coordinates, item2: Coordinates) {
+    const item1Left = item1.x;
+    const item1Right = item1.x + item1.width;
+    const item1Top = item1.y;
+    const item1Bottom = item1.y + item1.height;
+  
+    const item2Left = item2.x;
+    const item2Right = item2.x + item2.width;
+    const item2Top = item2.y;
+    const item2Bottom = item2.y + item2.height;
+  
+    return (
+      item1Left < item2Right &&
+      item1Right > item2Left &&
+      item1Top < item2Bottom &&
+      item1Bottom > item2Top
+    );
+  }
+
   function onHandMove(_: GestureResponderEvent, gestureState: PanResponderGestureState) {
     const activeItem = getActiveItem()
     if (!activeItem) return false
@@ -162,13 +192,32 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
     let closetItemIndex = activeItemIndex as number
     let closetDistance = dragPositionToActivePositionDistance
 
-    items.forEach((item, index) => {
+    const horizontalMargin = 0.2;
+    const verticalMargin = 0.1;
+    items.map((item, index) => {
       if (item.itemData.disabledReSorted) return
+      const activeItemCoordinates: Coordinates = {
+        x: parseFloat(JSON.stringify(activeItem.currentPosition.x)) + blockWidth/2, 
+        y: parseFloat(JSON.stringify(activeItem.currentPosition.y)) + blockHeight/2, 
+        width: blockWidth - (horizontalMargin * blockWidth), 
+        height: blockHeight - (verticalMargin * blockHeight)
+      };
       if (index != activeItemIndex) {
+        const coordinates: Coordinates = {
+          x: parseFloat(JSON.stringify(item.currentPosition.x)) + blockWidth/2, 
+          y: parseFloat(JSON.stringify(item.currentPosition.y)) + blockWidth/2, 
+          width: blockWidth - (horizontalMargin * blockWidth), 
+          height: blockHeight - (verticalMargin * blockHeight)
+        };
         const dragPositionToItemPositionDistance = getDistance(
           dragPosition,
           blockPositions[orderMap[item.key].order],
         )
+        if(areItemsOverlapping(coordinates, activeItemCoordinates)){
+          if (JSON.stringify(item.isOverlaying) === '0') displayOverlay(index);
+        }else{
+          if (JSON.stringify(item.isOverlaying) !== '0') hideOverlay(index);
+        }
         if (
           dragPositionToItemPositionDistance < closetDistance &&
           dragPositionToItemPositionDistance < blockWidth
@@ -192,7 +241,15 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
     setPanResponderCapture(false)
     activeItem.currentPosition.flattenOffset()
     moveBlockToBlockOrderPosition(activeItem.key)
+    endDragStartAnimation();
+    isDragging.current = false;
     setActiveItemIndex(undefined)
+    items.forEach((item, index) => {
+      if (JSON.stringify(item.isOverlaying) !== '0') {
+        hideOverlay(index);
+        props.onReleaseOverlaying && props.onReleaseOverlaying(activeItem.itemData, item.itemData)
+      }
+    });
   }
   function resetBlockPositionByOrder(activeItemOrder: number, insertedPositionOrder: number) {
     let disabledReSortedItemCount = 0
@@ -231,6 +288,22 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
       useNativeDriver: false,
     }).start()
   }
+  function displayOverlay(itemIndex: number) {
+    items[itemIndex].currentPosition.flattenOffset()
+    Animated.timing(items[itemIndex].isOverlaying, {
+      toValue: overlayOpacity,
+      duration: 20,
+      useNativeDriver: false,
+    }).start()
+  }
+  function hideOverlay(itemIndex: number) {
+    items[itemIndex].currentPosition.flattenOffset()
+    Animated.timing(items[itemIndex].isOverlaying, {
+      toValue: 0,
+      duration: 20,
+      useNativeDriver: false,
+    }).start()
+  }
   function getKeyByOrder(order: number) {
     return findKey(orderMap, (item: IOrderMapItem) => item.order === order) as string
   }
@@ -253,11 +326,23 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
     setPanResponderCapture(true)
     setActiveItemIndex(itemIndex)
   }
+  function onPressOut() {
+    if (!isDragging.current) setActiveItemIndex(undefined)
+  }
   function startDragStartAnimation() {
     if (!props.dragStartAnimation) {
       dragStartAnimatedValue.setValue(1)
       Animated.timing(dragStartAnimatedValue, {
         toValue: 1.1,
+        duration: 100,
+        useNativeDriver: false,
+      }).start()
+    }
+  }
+  function endDragStartAnimation() {
+    if (!props.dragStartAnimation) {
+      Animated.timing(dragStartAnimatedValue, {
+        toValue: 1,
         duration: 100,
         useNativeDriver: false,
       }).start()
@@ -319,6 +404,7 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
       key: item.key,
       itemData: item,
       currentPosition: new Animated.ValueXY(getBlockPositionByOrder(index)),
+      isOverlaying: new Animated.Value(0),
     })
   }
 
@@ -328,6 +414,7 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
     blockPositions.pop()
     delete orderMap[item.key]
   }
+
   function diffData() {
     props.data.forEach((item, index) => {
       if (orderMap[item.key]) {
@@ -367,11 +454,13 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
     return (
       <Block
         onPress={onBlockPress.bind(null, itemIndex)}
+        onPressOut={onPressOut}
         onLongPress={setActiveBlock.bind(null, itemIndex, item.itemData)}
         panHandlers={panResponder.panHandlers}
         style={getBlockStyle(itemIndex)}
         dragStartAnimationStyle={getDragStartAnimation(itemIndex)}
         delayLongPress={props.delayLongPress || 300}
+        opacity={item.isOverlaying}
         key={item.key}>
         {props.renderItem(item.itemData, orderMap[item.key].order)}
       </Block>

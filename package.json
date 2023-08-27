@@ -5,7 +5,7 @@
     "sortable",
     "grid"
   ],
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A draggable grid for react native",
   "main": "built/src/index.js",
   "types": "src/index.ts",
@@ -39,7 +39,7 @@
   "pre-commit": [
     "test"
   ],
-  "author": "shisme",
+  "author": "devcesarlopes",
   "license": "ISC",
   "devDependencies": {
     "@types/jest": "^24.0.18",

@@ -37,25 +37,36 @@ export const Block: FunctionComponent<BlockProps> = ({
     blockContainer: {
       alignItems: 'center',
     },
+    parentContainer: {
+      display: 'flex',
+      width: '100%',
+      height: '100%',
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
     overlayContainer: {
-      top: '-3%',
-      left: '-6%',
-      width: '90%',
-      height: '106%',
-      opacity: opacity,
       position: 'absolute',
+      display: 'flex',
+      width: '90%',
+      height: '100%',
+      opacity: opacity,
       backgroundColor: '#d3d3d3',
       borderRadius: 20,
-      paddingHorizontal: '2%',
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    childrenContainer: {
+      width: '90%',
+      height: '90%',
     },
   })
   
   return (
     <Animated.View style={[styles.blockContainer, style, dragStartAnimationStyle]} {...panHandlers}>
-      <Animated.View>
+      <Animated.View style={styles.parentContainer}>
         <>
           <Animated.View style={styles.overlayContainer} />
-          <TouchableWithoutFeedback delayLongPress={delayLongPress} onPress={onPress} onLongPress={onLongPress} onPressOut={onPressOut}>
+          <TouchableWithoutFeedback style={styles.childrenContainer} delayLongPress={delayLongPress} onPress={onPress} onLongPress={onLongPress} onPressOut={onPressOut}>
             {children}
           </TouchableWithoutFeedback>
         </>

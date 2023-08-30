@@ -18,24 +18,24 @@ var react_native_1 = require("react-native");
 var block_1 = require("./block");
 var utils_1 = require("./utils");
 var activeBlockOffset = { x: 0, y: 0 };
-var DraggableGrid = function (props) {
-    var blockPositions = (0, react_1.useState)([])[0];
-    var orderMap = (0, react_1.useState)({})[0];
-    var itemMap = (0, react_1.useState)({})[0];
-    var items = (0, react_1.useState)([])[0];
-    var _a = (0, react_1.useState)(0), blockHeight = _a[0], setBlockHeight = _a[1];
-    var _b = (0, react_1.useState)(0), blockWidth = _b[0], setBlockWidth = _b[1];
-    var gridHeight = (0, react_1.useState)(new react_native_1.Animated.Value(0))[0];
-    var _c = (0, react_1.useState)(false), hadInitBlockSize = _c[0], setHadInitBlockSize = _c[1];
-    var isDragging = (0, react_1.useRef)(false);
-    var dragStartAnimatedValue = (0, react_1.useState)(new react_native_1.Animated.Value(1))[0];
-    var _d = (0, react_1.useState)({
+exports.DraggableGrid = function (props) {
+    var blockPositions = react_1.useState([])[0];
+    var orderMap = react_1.useState({})[0];
+    var itemMap = react_1.useState({})[0];
+    var items = react_1.useState([])[0];
+    var _a = react_1.useState(0), blockHeight = _a[0], setBlockHeight = _a[1];
+    var _b = react_1.useState(0), blockWidth = _b[0], setBlockWidth = _b[1];
+    var gridHeight = react_1.useState(new react_native_1.Animated.Value(0))[0];
+    var _c = react_1.useState(false), hadInitBlockSize = _c[0], setHadInitBlockSize = _c[1];
+    var isDragging = react_1.useRef(false);
+    var dragStartAnimatedValue = react_1.useState(new react_native_1.Animated.Value(1))[0];
+    var _d = react_1.useState({
         x: 0,
         y: 0,
         width: 0,
         height: 0,
     }), gridLayout = _d[0], setGridLayout = _d[1];
-    var _e = (0, react_1.useState)(), activeItemIndex = _e[0], setActiveItemIndex = _e[1];
+    var _e = react_1.useState(), activeItemIndex = _e[0], setActiveItemIndex = _e[1];
     var overlayOpacity = 0.5;
     var assessGridSize = function (event) {
         if (!hadInitBlockSize) {
@@ -47,7 +47,7 @@ var DraggableGrid = function (props) {
             setHadInitBlockSize(true);
         }
     };
-    var _f = (0, react_1.useState)(false), panResponderCapture = _f[0], setPanResponderCapture = _f[1];
+    var _f = react_1.useState(false), panResponderCapture = _f[0], setPanResponderCapture = _f[1];
     var panResponder = react_native_1.PanResponder.create({
         onStartShouldSetPanResponder: function () { return true; },
         onStartShouldSetPanResponderCapture: function () { return false; },
@@ -228,7 +228,7 @@ var DraggableGrid = function (props) {
         }
     }
     function moveBlockToBlockOrderPosition(itemKey) {
-        var itemIndex = (0, utils_1.findIndex)(items, function (item) { return "".concat(item.key) === "".concat(itemKey); });
+        var itemIndex = utils_1.findIndex(items, function (item) { return "" + item.key === "" + itemKey; });
         items[itemIndex].currentPosition.flattenOffset();
         react_native_1.Animated.timing(items[itemIndex].currentPosition, {
             toValue: blockPositions[orderMap[itemKey].order],
@@ -253,7 +253,7 @@ var DraggableGrid = function (props) {
         }).start();
     }
     function getKeyByOrder(order) {
-        return (0, utils_1.findKey)(orderMap, function (item) { return item.order === order; });
+        return utils_1.findKey(orderMap, function (item) { return item.order === order; });
     }
     function getSortData() {
         var sortData = [];
@@ -353,7 +353,7 @@ var DraggableGrid = function (props) {
         });
     }
     function removeItem(item) {
-        var itemIndex = (0, utils_1.findIndex)(items, function (curItem) { return curItem.key === item.key; });
+        var itemIndex = utils_1.findIndex(items, function (curItem) { return curItem.key === item.key; });
         items.splice(itemIndex, 1);
         blockPositions.pop();
         delete orderMap[item.key];
@@ -375,20 +375,20 @@ var DraggableGrid = function (props) {
                 addItem(item, index);
             }
         });
-        var deleteItems = (0, utils_1.differenceBy)(items, props.data, 'key');
+        var deleteItems = utils_1.differenceBy(items, props.data, 'key');
         deleteItems.forEach(function (item) {
             removeItem(item);
         });
     }
-    (0, react_1.useEffect)(function () {
+    react_1.useEffect(function () {
         startDragStartAnimation();
     }, [activeItemIndex]);
-    (0, react_1.useEffect)(function () {
+    react_1.useEffect(function () {
         if (hadInitBlockSize) {
             initBlockPositions();
         }
     }, [gridLayout]);
-    (0, react_1.useEffect)(function () {
+    react_1.useEffect(function () {
         resetGridHeight();
     });
     if (hadInitBlockSize) {
@@ -400,16 +400,15 @@ var DraggableGrid = function (props) {
       </block_1.Block>);
     });
     return (<react_native_1.Animated.View style={[
-            styles.draggableGrid,
-            props.style,
-            {
-                height: gridHeight,
-            },
-        ]} onLayout={assessGridSize}>
+        styles.draggableGrid,
+        props.style,
+        {
+            height: gridHeight,
+        },
+    ]} onLayout={assessGridSize}>
       {hadInitBlockSize && itemList}
     </react_native_1.Animated.View>);
 };
-exports.DraggableGrid = DraggableGrid;
 var styles = react_native_1.StyleSheet.create({
     draggableGrid: {
         flex: 1,

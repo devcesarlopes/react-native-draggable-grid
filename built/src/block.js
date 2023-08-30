@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Block = void 0;
 var React = require("react");
 var react_native_1 = require("react-native");
-var Block = function (_a) {
+exports.Block = function (_a) {
     var style = _a.style, dragStartAnimationStyle = _a.dragStartAnimationStyle, onPress = _a.onPress, onPressOut = _a.onPressOut, onLongPress = _a.onLongPress, children = _a.children, panHandlers = _a.panHandlers, delayLongPress = _a.delayLongPress, opacity = _a.opacity;
     var styles = react_native_1.StyleSheet.create({
         blockContainer: {
@@ -44,5 +44,4 @@ var Block = function (_a) {
       </react_native_1.Animated.View>
     </react_native_1.Animated.View>);
 };
-exports.Block = Block;
 //# sourceMappingURL=block.js.map

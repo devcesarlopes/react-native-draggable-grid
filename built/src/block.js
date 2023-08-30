@@ -10,23 +10,34 @@ var Block = function (_a) {
         blockContainer: {
             alignItems: 'center',
         },
+        parentContainer: {
+            display: 'flex',
+            width: '100%',
+            height: '100%',
+            alignItems: 'center',
+            justifyContent: 'center'
+        },
         overlayContainer: {
-            top: '-3%',
-            left: '-6%',
-            width: '90%',
-            height: '106%',
-            opacity: opacity,
             position: 'absolute',
+            display: 'flex',
+            width: '90%',
+            height: '100%',
+            opacity: opacity,
             backgroundColor: '#d3d3d3',
             borderRadius: 20,
-            paddingHorizontal: '2%',
+            alignItems: 'center',
+            justifyContent: 'center'
+        },
+        childrenContainer: {
+            width: '90%',
+            height: '90%',
         },
     });
     return (<react_native_1.Animated.View style={[styles.blockContainer, style, dragStartAnimationStyle]} {...panHandlers}>
-      <react_native_1.Animated.View>
+      <react_native_1.Animated.View style={styles.parentContainer}>
         <>
           <react_native_1.Animated.View style={styles.overlayContainer}/>
-          <react_native_1.TouchableWithoutFeedback delayLongPress={delayLongPress} onPress={onPress} onLongPress={onLongPress} onPressOut={onPressOut}>
+          <react_native_1.TouchableWithoutFeedback style={styles.childrenContainer} delayLongPress={delayLongPress} onPress={onPress} onLongPress={onLongPress} onPressOut={onPressOut}>
             {children}
           </react_native_1.TouchableWithoutFeedback>
         </>

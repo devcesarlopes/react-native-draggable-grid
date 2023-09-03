@@ -24,6 +24,9 @@ interface IBaseItemType {
 
 export interface IDraggableGridProps<DataType extends IBaseItemType> {
   onReleaseOverlaying?: (draggingItem: DataType, colidedItem: DataType) => void
+  overlayColor?: string
+  overlayOpacity?: number
+  overlayWidth?: number
   numColumns: number
   data: DataType[]
   renderItem: (item: DataType, order: number) => React.ReactElement<any>
@@ -67,6 +70,10 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
   const [gridHeight] = useState<Animated.Value>(new Animated.Value(0))
   const [hadInitBlockSize, setHadInitBlockSize] = useState(false)
   const isDragging = useRef(false)
+  const defaultOverlayColor = '#d3d3d3';
+  const defaultOverlayOpacity = 0.5;
+  const defaultOverlayWidth = 90;
+  const defaultOverlayHeight = 100;
   const [dragStartAnimatedValue] = useState(new Animated.Value(1))
   const [gridLayout, setGridLayout] = useState({
     x: 0,
@@ -75,7 +82,6 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
     height: 0,
   })
   const [activeItemIndex, setActiveItemIndex] = useState<undefined | number>()
-  const overlayOpacity = 0.5;
   const assessGridSize = (event: IOnLayoutEvent) => {
     if (!hadInitBlockSize) {
       let blockWidth = event.nativeEvent.layout.width / props.numColumns
@@ -192,7 +198,7 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
     let closetItemIndex = activeItemIndex as number
     let closetDistance = dragPositionToActivePositionDistance
 
-    const horizontalMargin = 0.2;
+    const horizontalMargin = 1 - (props.overlayWidth || defaultOverlayWidth)/100;
     const verticalMargin = 0.1;
     items.map((item, index) => {
       if (item.itemData.disabledReSorted) return
@@ -291,7 +297,7 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
   function displayOverlay(itemIndex: number) {
     items[itemIndex].currentPosition.flattenOffset()
     Animated.timing(items[itemIndex].isOverlaying, {
-      toValue: overlayOpacity,
+      toValue: props.overlayOpacity ? props.overlayOpacity : defaultOverlayOpacity,
       duration: 20,
       useNativeDriver: false,
     }).start()
@@ -461,6 +467,8 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
         dragStartAnimationStyle={getDragStartAnimation(itemIndex)}
         delayLongPress={props.delayLongPress || 300}
         opacity={item.isOverlaying}
+        overlayWidth = {props.overlayWidth || defaultOverlayWidth}
+        overlayColor = {props.overlayColor || defaultOverlayColor}
         key={item.key}>
         {props.renderItem(item.itemData, orderMap[item.key].order)}
       </Block>

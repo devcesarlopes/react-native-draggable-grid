@@ -20,6 +20,8 @@ interface BlockProps {
   delayLongPress:number
   children?:React.ReactNode
   opacity:any
+  overlayWidth:number
+  overlayColor: string
 }
 
 export const Block: FunctionComponent<BlockProps> = ({
@@ -32,6 +34,8 @@ export const Block: FunctionComponent<BlockProps> = ({
   panHandlers,
   delayLongPress,
   opacity,
+  overlayWidth,
+  overlayColor
 }) => {
   const styles = StyleSheet.create({
     blockContainer: {
@@ -47,10 +51,10 @@ export const Block: FunctionComponent<BlockProps> = ({
     overlayContainer: {
       position: 'absolute',
       display: 'flex',
-      width: '90%',
+      width: `${overlayWidth}%`,
       height: '100%',
       opacity: opacity,
-      backgroundColor: '#d3d3d3',
+      backgroundColor: overlayColor,
       borderRadius: 20,
       alignItems: 'center',
       justifyContent: 'center'

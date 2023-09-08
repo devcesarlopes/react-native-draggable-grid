@@ -28,6 +28,7 @@ export interface IDraggableGridProps<DataType extends IBaseItemType> {
   overlayOpacity?: number
   overlayWidth?: number
   numColumns: number
+  onReorder?: (newSortedData: DataType[]) => void
   data: DataType[]
   renderItem: (item: DataType, order: number) => React.ReactElement<any>
   style?: ViewStyle
@@ -70,6 +71,7 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
   const [gridHeight] = useState<Animated.Value>(new Animated.Value(0))
   const [hadInitBlockSize, setHadInitBlockSize] = useState(false)
   const isDragging = useRef(false)
+  const orderMapBeforeDragging = useRef('');
   const defaultOverlayColor = '#d3d3d3';
   const defaultOverlayOpacity = 0.5;
   const defaultOverlayWidth = 90;
@@ -135,6 +137,7 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
     if (!activeItem) return false
     isDragging.current = true;
     props.onDragStart && props.onDragStart(activeItem.itemData)
+    orderMapBeforeDragging.current = JSON.stringify(orderMap);
     const { x0, y0, moveX, moveY } = gestureState
     const activeOrigin = blockPositions[orderMap[activeItem.key].order]
     const x = activeOrigin.x - x0
@@ -243,19 +246,28 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
   function onHandRelease() {
     const activeItem = getActiveItem()
     if (!activeItem) return false
-    props.onDragRelease && props.onDragRelease(getSortData())
+    let isOverlaying = undefined;
+    items.forEach((item, index) => {
+      if (JSON.stringify(item.isOverlaying) !== '0') {
+        hideOverlay(index);
+        isOverlaying = [activeItem.itemData, item.itemData];
+      }
+    });
+    const itemsWereReordered = orderMapBeforeDragging.current !== JSON.stringify(orderMap);
+    if (isOverlaying) {
+      props.onReleaseOverlaying && props.onReleaseOverlaying(isOverlaying[0], isOverlaying[1]);
+    } else if (itemsWereReordered) {
+      props.onReorder && props.onReorder(getSortData());
+    } else {
+      props.onDragRelease && props.onDragRelease(getSortData())
+    }
     setPanResponderCapture(false)
     activeItem.currentPosition.flattenOffset()
     moveBlockToBlockOrderPosition(activeItem.key)
     endDragStartAnimation();
     isDragging.current = false;
     setActiveItemIndex(undefined)
-    items.forEach((item, index) => {
-      if (JSON.stringify(item.isOverlaying) !== '0') {
-        hideOverlay(index);
-        props.onReleaseOverlaying && props.onReleaseOverlaying(activeItem.itemData, item.itemData)
-      }
-    });
+    
   }
   function resetBlockPositionByOrder(activeItemOrder: number, insertedPositionOrder: number) {
     let disabledReSortedItemCount = 0
@@ -333,7 +345,10 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
     setActiveItemIndex(itemIndex)
   }
   function onPressOut() {
-    if (!isDragging.current) setActiveItemIndex(undefined)
+    if (!isDragging.current) {
+      if(getActiveItem()) props.onDragRelease && props.onDragRelease(getSortData())
+      setActiveItemIndex(undefined)
+    }
   }
   function startDragStartAnimation() {
     if (!props.dragStartAnimation) {

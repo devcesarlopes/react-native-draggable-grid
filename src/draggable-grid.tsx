@@ -33,6 +33,7 @@ export interface IDraggableGridProps<DataType extends IBaseItemType> {
   renderItem: (item: DataType, order: number) => React.ReactElement<any>
   style?: ViewStyle
   itemHeight?: number
+  testID?: string
   dragStartAnimation?: StyleProp<any>
   onItemPress?: (item: DataType) => void
   onDragStart?: (item: DataType) => void
@@ -492,6 +493,7 @@ export const DraggableGrid = function<DataType extends IBaseItemType>(
 
   return (
     <Animated.View
+      testID={props.testID}
       style={[
         styles.draggableGrid,
         props.style,

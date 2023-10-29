@@ -5,7 +5,7 @@ exports.Block = void 0;
 var React = require("react");
 var react_native_1 = require("react-native");
 exports.Block = function (_a) {
-    var style = _a.style, dragStartAnimationStyle = _a.dragStartAnimationStyle, onPress = _a.onPress, onPressOut = _a.onPressOut, onLongPress = _a.onLongPress, children = _a.children, panHandlers = _a.panHandlers, delayLongPress = _a.delayLongPress, opacity = _a.opacity;
+    var style = _a.style, dragStartAnimationStyle = _a.dragStartAnimationStyle, onPress = _a.onPress, onPressOut = _a.onPressOut, onLongPress = _a.onLongPress, children = _a.children, panHandlers = _a.panHandlers, delayLongPress = _a.delayLongPress, opacity = _a.opacity, overlayWidth = _a.overlayWidth, overlayColor = _a.overlayColor;
     var styles = react_native_1.StyleSheet.create({
         blockContainer: {
             alignItems: 'center',
@@ -20,10 +20,10 @@ exports.Block = function (_a) {
         overlayContainer: {
             position: 'absolute',
             display: 'flex',
-            width: '90%',
+            width: overlayWidth + "%",
             height: '100%',
             opacity: opacity,
-            backgroundColor: '#d3d3d3',
+            backgroundColor: overlayColor,
             borderRadius: 20,
             alignItems: 'center',
             justifyContent: 'center'

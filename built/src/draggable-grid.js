@@ -28,6 +28,11 @@ exports.DraggableGrid = function (props) {
     var gridHeight = react_1.useState(new react_native_1.Animated.Value(0))[0];
     var _c = react_1.useState(false), hadInitBlockSize = _c[0], setHadInitBlockSize = _c[1];
     var isDragging = react_1.useRef(false);
+    var orderMapBeforeDragging = react_1.useRef('');
+    var defaultOverlayColor = '#d3d3d3';
+    var defaultOverlayOpacity = 0.5;
+    var defaultOverlayWidth = 90;
+    var defaultOverlayHeight = 100;
     var dragStartAnimatedValue = react_1.useState(new react_native_1.Animated.Value(1))[0];
     var _d = react_1.useState({
         x: 0,
@@ -36,7 +41,6 @@ exports.DraggableGrid = function (props) {
         height: 0,
     }), gridLayout = _d[0], setGridLayout = _d[1];
     var _e = react_1.useState(), activeItemIndex = _e[0], setActiveItemIndex = _e[1];
-    var overlayOpacity = 0.5;
     var assessGridSize = function (event) {
         if (!hadInitBlockSize) {
             var blockWidth_1 = event.nativeEvent.layout.width / props.numColumns;
@@ -89,6 +93,7 @@ exports.DraggableGrid = function (props) {
             return false;
         isDragging.current = true;
         props.onDragStart && props.onDragStart(activeItem.itemData);
+        orderMapBeforeDragging.current = JSON.stringify(orderMap);
         var x0 = gestureState.x0, y0 = gestureState.y0, moveX = gestureState.moveX, moveY = gestureState.moveY;
         var activeOrigin = blockPositions[orderMap[activeItem.key].order];
         var x = activeOrigin.x - x0;
@@ -137,7 +142,7 @@ exports.DraggableGrid = function (props) {
         activeItem.currentPosition.setValue(dragPosition);
         var closetItemIndex = activeItemIndex;
         var closetDistance = dragPositionToActivePositionDistance;
-        var horizontalMargin = 0.2;
+        var horizontalMargin = 1 - (props.overlayWidth || defaultOverlayWidth) / 100;
         var verticalMargin = 0.1;
         items.map(function (item, index) {
             if (item.itemData.disabledReSorted)
@@ -182,19 +187,29 @@ exports.DraggableGrid = function (props) {
         var activeItem = getActiveItem();
         if (!activeItem)
             return false;
-        props.onDragRelease && props.onDragRelease(getSortData());
+        var isOverlaying = undefined;
+        items.forEach(function (item, index) {
+            if (JSON.stringify(item.isOverlaying) !== '0') {
+                hideOverlay(index);
+                isOverlaying = [activeItem.itemData, item.itemData];
+            }
+        });
+        var itemsWereReordered = orderMapBeforeDragging.current !== JSON.stringify(orderMap);
+        if (isOverlaying) {
+            props.onReleaseOverlaying && props.onReleaseOverlaying(isOverlaying[0], isOverlaying[1]);
+        }
+        else if (itemsWereReordered) {
+            props.onReorder && props.onReorder(getSortData());
+        }
+        else {
+            props.onDragRelease && props.onDragRelease(getSortData());
+        }
         setPanResponderCapture(false);
         activeItem.currentPosition.flattenOffset();
         moveBlockToBlockOrderPosition(activeItem.key);
         endDragStartAnimation();
         isDragging.current = false;
         setActiveItemIndex(undefined);
-        items.forEach(function (item, index) {
-            if (JSON.stringify(item.isOverlaying) !== '0') {
-                hideOverlay(index);
-                props.onReleaseOverlaying && props.onReleaseOverlaying(activeItem.itemData, item.itemData);
-            }
-        });
     }
     function resetBlockPositionByOrder(activeItemOrder, insertedPositionOrder) {
         var disabledReSortedItemCount = 0;
@@ -239,7 +254,7 @@ exports.DraggableGrid = function (props) {
     function displayOverlay(itemIndex) {
         items[itemIndex].currentPosition.flattenOffset();
         react_native_1.Animated.timing(items[itemIndex].isOverlaying, {
-            toValue: overlayOpacity,
+            toValue: props.overlayOpacity ? props.overlayOpacity : defaultOverlayOpacity,
             duration: 20,
             useNativeDriver: false,
         }).start();
@@ -274,8 +289,11 @@ exports.DraggableGrid = function (props) {
         setActiveItemIndex(itemIndex);
     }
     function onPressOut() {
-        if (!isDragging.current)
+        if (!isDragging.current) {
+            if (getActiveItem())
+                props.onDragRelease && props.onDragRelease(getSortData());
             setActiveItemIndex(undefined);
+        }
     }
     function startDragStartAnimation() {
         if (!props.dragStartAnimation) {
@@ -395,11 +413,11 @@ exports.DraggableGrid = function (props) {
         diffData();
     }
     var itemList = items.map(function (item, itemIndex) {
-        return (<block_1.Block onPress={onBlockPress.bind(null, itemIndex)} onPressOut={onPressOut} onLongPress={setActiveBlock.bind(null, itemIndex, item.itemData)} panHandlers={panResponder.panHandlers} style={getBlockStyle(itemIndex)} dragStartAnimationStyle={getDragStartAnimation(itemIndex)} delayLongPress={props.delayLongPress || 300} opacity={item.isOverlaying} key={item.key}>
+        return (<block_1.Block onPress={onBlockPress.bind(null, itemIndex)} onPressOut={onPressOut} onLongPress={setActiveBlock.bind(null, itemIndex, item.itemData)} panHandlers={panResponder.panHandlers} style={getBlockStyle(itemIndex)} dragStartAnimationStyle={getDragStartAnimation(itemIndex)} delayLongPress={props.delayLongPress || 300} opacity={item.isOverlaying} overlayWidth={props.overlayWidth || defaultOverlayWidth} overlayColor={props.overlayColor || defaultOverlayColor} key={item.key}>
         {props.renderItem(item.itemData, orderMap[item.key].order)}
       </block_1.Block>);
     });
-    return (<react_native_1.Animated.View style={[
+    return (<react_native_1.Animated.View testID={props.testID} style={[
         styles.draggableGrid,
         props.style,
         {
